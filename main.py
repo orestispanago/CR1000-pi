@@ -45,6 +45,10 @@ def store_to_daily_files(records):
         records_to_csv(d, output_file)
 
 
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 last_record_file = "last_record.log"
 dt_format = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -63,6 +67,6 @@ store_to_daily_files(data)
 store_last_record(last_record, last_record_file, dt_format)
 
 
-local_files = glob.glob("*.csv")
+local_files = sorted(glob.glob("*.csv"))
 upload_to_ftp(local_files, ftp_ip, ftp_user, ftp_password, ftp_dir)
-archive_uploaded(local_files)
+archive_uploaded(local_files, "archive")
