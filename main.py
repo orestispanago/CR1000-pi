@@ -23,9 +23,9 @@ def store_last_record(last_record, fname, dt_format):
         f.write(last_record_str)
 
 
-def get_last_stored_record(last_record_file, dt_format):
-    if os.path.exists(last_record_file) and os.path.getsize(last_record_file) > 0:
-        with open(last_record_file, "r") as f:
+def get_last_stored_record(last_rec_file, dt_format):
+    if os.path.exists(last_rec_file) and os.path.getsize(last_rec_file) > 0:
+        with open(last_rec_file, "r") as f:
             return datetime.datetime.strptime(f.read(), dt_format)
     return datetime.datetime(2022, 7, 1, 13, 0, 0)
 
@@ -45,28 +45,22 @@ def store_to_daily_files(records):
         records_to_csv(d, output_file)
 
 
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
+def get_start_stop():
+    last_stored_rec = get_last_stored_record(LAST_REC_FILE, DT_FORMAT)
+    start = last_stored_rec + datetime.timedelta(milliseconds=1)
+    stop = datetime.datetime.utcnow()
+    return start, stop
 
-last_record_file = "last_record.log"
-dt_format = "%Y-%m-%d %H:%M:%S.%f"
-
-last_stored_rec = get_last_stored_record(last_record_file, dt_format)
-start = last_stored_rec + datetime.timedelta(milliseconds=1)
-stop = datetime.datetime.utcnow()
-
+start, stop = get_start_stop()
 device = CR1000.from_url("serial:/dev/ttyUSB0:115200")
 data = device.get_data("Table1", start, stop)
 
-first_record = data[0]["Datetime"]
 last_record = data[-1]["Datetime"]
 
-
 store_to_daily_files(data)
-store_last_record(last_record, last_record_file, dt_format)
+store_last_record(last_record, LAST_REC_FILE, DT_FORMAT)
 
 
 local_files = sorted(glob.glob("*.csv"))
-upload_to_ftp(local_files, ftp_ip, ftp_user, ftp_password, ftp_dir)
-archive_uploaded(local_files, "archive")
+upload_to_ftp(local_files, FTP_IP, FTP_USER, FTP_PASS, FTP_DIR)
+archive_uploaded(local_files, ARCHIVE_DIR)

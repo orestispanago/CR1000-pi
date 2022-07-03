@@ -16,7 +16,7 @@ def mkdir_if_not_exists(dir_path):
 
 
 def archive_uploaded(local_files, dest_folder):
-    mkdir_if_not_exists(os.path.join(os.getcwd(), dest_folder))
+    mkdir_if_not_exists(dest_folder)
     if len(local_files) > 1:
         for local_file in local_files[:-1]:
             os.rename(local_file, f"{dest_folder}/{local_file}")
