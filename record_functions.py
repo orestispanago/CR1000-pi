@@ -38,7 +38,7 @@ def get_last_stored_record(last_rec_file, dt_format):
     if os.path.exists(last_rec_file) and os.path.getsize(last_rec_file) > 0:
         with open(last_rec_file, "r") as f:
             return datetime.datetime.strptime(f.read(), dt_format)
-    return datetime.datetime(2022, 7, 1, 13, 0, 0)
+    return datetime.datetime(1990, 1, 1, 0, 0, 1)
 
 
 def get_start_stop(last_rec_file, dt_format):
