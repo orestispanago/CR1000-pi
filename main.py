@@ -1,6 +1,7 @@
 import os
 import glob
 import logging
+import logging.config
 import traceback
 from pycampbellcr1000 import CR1000
 from uploader import upload_to_ftp, archive_past_days
@@ -13,12 +14,7 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-logging.basicConfig(
-    filename="logfile.log",
-    encoding="utf-8",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s: %(message)s",
-)
+logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 logging.getLogger("pycampbellcr1000").setLevel(logging.CRITICAL + 1)
 logging.getLogger("pylink").setLevel(logging.CRITICAL + 1)
 
@@ -30,9 +26,9 @@ CR1000.get_data_generator = overriden.get_data_generator
 def main():
     start, stop = get_start_stop(LAST_REC_FILE, DT_FORMAT)
 
-    logger.info("Connecting to device...")
+    logger.debug("Connecting to device...")
     device = CR1000(usb.serial_port())
-    logger.info("Connection successfull. Retrieving data...")
+    logger.debug("Connection successfull. Retrieving data...")
 
     data = device.get_data("Table1", start, stop)
     logger.info(f"Retrieved {len(data)} records.")
@@ -44,7 +40,7 @@ def main():
     upload_to_ftp(local_files, FTP_IP, FTP_USER, FTP_PASS, FTP_DIR)
     archive_past_days(local_files, "archive")
 
-    logger.info("SUCCESS! Bye...\n")
+    logger.debug(f"{'-' * 15} SUCCESS {'-' * 15}")
 
 
 if __name__ == "__main__":

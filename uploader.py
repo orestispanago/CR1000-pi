@@ -1,13 +1,12 @@
 import os
 from ftplib import FTP
 import logging
-from threading import local
 
 logger = logging.getLogger(__name__)
 
 
 def upload_to_ftp(local_files, ftp_ip, ftp_user, ftp_password, ftp_dir):
-    logger.info("Uploading to FTP server...")
+    logger.debug("Uploading to FTP server...")
     with FTP(ftp_ip, ftp_user, ftp_password) as ftp:
         ftp.cwd(ftp_dir)
         for local_file in local_files:
