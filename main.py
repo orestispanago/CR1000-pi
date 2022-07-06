@@ -21,21 +21,22 @@ logging.getLogger("pylink").setLevel(logging.CRITICAL + 1)
 logger = logging.getLogger(__name__)
 
 CR1000.get_data_generator = overriden.get_data_generator
+from dummy_data import save_dummy_daily_file
 
 
 def main():
-    start, stop = get_start_stop(LAST_REC_FILE, DT_FORMAT)
+    # start, stop = get_start_stop(LAST_REC_FILE, DT_FORMAT)
 
-    logger.debug("Connecting to device...")
-    device = CR1000(usb.serial_port())
-    logger.debug("Connection successfull. Retrieving data...")
+    # logger.debug("Connecting to device...")
+    # device = CR1000(usb.serial_port())
+    # logger.debug("Connection successfull. Retrieving data...")
 
-    data = device.get_data("Table1", start, stop)
-    logger.info(f"Retrieved {len(data)} records.")
+    # data = device.get_data("Table1", start, stop)
+    # logger.info(f"Retrieved {len(data)} records.")
 
-    store_to_daily_files(data)
-    store_last_record(data, LAST_REC_FILE, DT_FORMAT)
-
+    # store_to_daily_files(data)
+    # store_last_record(data, LAST_REC_FILE, DT_FORMAT)
+    save_dummy_daily_file()
     local_files = sorted(glob.glob("*.csv"))
     upload_to_ftp(local_files, FTP_IP, FTP_USER, FTP_PASS, FTP_DIR)
     archive_past_days(local_files, "archive")
