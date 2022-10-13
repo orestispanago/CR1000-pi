@@ -3,10 +3,7 @@ import glob
 import logging
 import logging.config
 import traceback
-from uploader import upload_to_ftp
-from file_utils import archive_past_days
-from config import FTP_IP, FTP_USER, FTP_PASS, FTP_DIR
-from record_functions import save_as_daily_files
+from uploader import upload_to_ftp, archive_past_days
 import datalogger
 
 abspath = os.path.abspath(__file__)
@@ -22,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 def main():
     data = datalogger.get_data_since_last_readout()
-    save_as_daily_files(data)
+    datalogger.save_as_daily_files(data)
     local_files = sorted(glob.glob("*.csv"))
-    upload_to_ftp(local_files, FTP_IP, FTP_USER, FTP_PASS, FTP_DIR)
+    upload_to_ftp(local_files)
     archive_past_days(local_files, "archive")
     logger.debug(f"{'-' * 15} SUCCESS {'-' * 15}")
 
