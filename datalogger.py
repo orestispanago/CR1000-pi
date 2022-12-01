@@ -11,7 +11,7 @@ from pycampbellcr1000.utils import ListDict
 logger = logging.getLogger(__name__)
 
 DATA_DIR = "data"
-TABLE_NAME = "Table1"
+TABLE_NAME = "MinAvg_final"
 
 # Override pycampbellcr1000.ListDict method to avoid b'' in table fields
 def get_data_generator(self, tablename, start_date=None, stop_date=None):
