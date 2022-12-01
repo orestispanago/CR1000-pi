@@ -1,14 +1,17 @@
-import os
-import itertools
-import glob
 import datetime
+import glob
+import itertools
 import logging
+import os
+
 import serial
 from pycampbellcr1000 import CR1000
 from pycampbellcr1000.utils import ListDict
 
 logger = logging.getLogger(__name__)
 
+DATA_DIR = "data"
+TABLE_NAME = "Table1"
 
 # Override pycampbellcr1000.ListDict method to avoid b'' in table fields
 def get_data_generator(self, tablename, start_date=None, stop_date=None):
@@ -39,15 +42,18 @@ def get_data_generator(self, tablename, start_date=None, stop_date=None):
                         (j == (len(rec["RecFrag"]) - 1)) and (i == (len(data) - 1))
                     ):
                         break
-                    new_rec = {"Datetime": item["TimeOfRec"], "RecNbr": item["RecNbr"]}
+                    new_rec = {
+                        "Datetime_UTC": item["TimeOfRec"],
+                        "RecNbr": item["RecNbr"],
+                    }
                     for key in item["Fields"]:
                         # overriden part
                         new_rec[key.decode("utf-8")] = item["Fields"][key]
                     records.append(new_rec)
 
         if records:
-            records = records.sorted_by("Datetime")
-            yield records.sorted_by("Datetime")
+            records = records.sorted_by("Datetime_UTC")
+            yield records.sorted_by("Datetime_UTC")
         else:
             more = False
 
@@ -63,7 +69,7 @@ def records_to_csv(records, fname):
 
 def group_by_date(records):
     dates = []
-    date_func = lambda x: x["Datetime"].date()
+    date_func = lambda x: x["Datetime_UTC"].date()
     for key, group in itertools.groupby(records, date_func):
         dates.append(ListDict(group))
     return dates
@@ -72,17 +78,20 @@ def group_by_date(records):
 def save_as_daily_files(records):
     dates = group_by_date(records)
     for d in dates:
-        output_file = f'{d[0]["Datetime"].strftime("%Y%m%d")}.csv'
-        records_to_csv(d, output_file)
+        fname = f'{d[0].get("Datetime_UTC").strftime("%Y%m%d")}.csv'
+        fpath = os.path.join(DATA_DIR, fname)
+        records_to_csv(d, fpath)
 
 
 def get_last_record():
-    local_files = sorted(glob.glob("*.csv"))
+    local_files = sorted(glob.glob(f"{DATA_DIR}/*.csv"))
     if len(local_files) > 0:
         with open(local_files[-1], "r") as f:
             last_line = f.readlines()[-1]
-            last_record = last_line.split(",")[0]
-            return datetime.datetime.strptime(last_record, "%Y-%m-%d %H:%M:%S")
+        last_record = last_line.split(",")[0]
+        logger.debug(f"Last readout: {last_record}")
+        return datetime.datetime.strptime(last_record, "%Y-%m-%d %H:%M:%S")
+    logger.warning("No .csv file found, will read all datalogger memory...")
     return datetime.datetime(1990, 1, 1, 0, 0, 1)
 
 
@@ -110,8 +119,7 @@ def get_data_since_last_readout():
     device = CR1000(serial_port())
     logger.debug("Connection successfull. Retrieving data...")
 
-    data = device.get_data("Table1", start, stop)
-    print(data)
+    data = device.get_data(TABLE_NAME, start, stop)
     logger.info(f"Retrieved {len(data)} records.")
     return data
 
