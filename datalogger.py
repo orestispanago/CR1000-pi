@@ -6,7 +6,7 @@ import os
 
 import serial
 from pycampbellcr1000 import CR1000
-from pycampbellcr1000.utils import ListDict
+from pycampbellcr1000.utils import ListDict, nsec_to_time
 
 logger = logging.getLogger(__name__)
 
@@ -111,13 +111,33 @@ def serial_port():
     return ser
 
 
+def set_time_utc(self):
+    """Sets datalogger time to current UTC"""
+    current_time = self.gettime()
+    logger.debug(f"Current time: {current_time}")
+    utc_now = datetime.datetime.utcnow()
+    self.ping_node()
+    diff = int((utc_now - current_time).total_seconds())
+    logger.debug(f"Setting datalogger time to: {utc_now}")
+    # settime (OldTime in response)
+    hdr, msg, sdt1 = self.send_wait(self.pakbus.get_clock_cmd((diff, 0)))
+    # gettime (NewTime in response)
+    hdr, msg, sdt2 = self.send_wait(self.pakbus.get_clock_cmd())
+    # remove transmission time
+    new_time = nsec_to_time(msg["Time"]) - (sdt1 + sdt2)
+    logger.debug(f"New time: {new_time}")
+    return new_time
+
+
 def get_data_since_last_readout():
     start = get_last_record() + datetime.timedelta(milliseconds=1)
     stop = datetime.datetime.utcnow()
 
     logger.debug("Connecting to device...")
     device = CR1000(serial_port())
-    logger.debug("Connection successfull. Retrieving data...")
+    logger.debug("Connection successfull.")
+
+    device.set_time_utc()
 
     data = device.get_data(TABLE_NAME, start, stop)
     logger.info(f"Retrieved {len(data)} records.")
@@ -125,3 +145,4 @@ def get_data_since_last_readout():
 
 
 CR1000.get_data_generator = get_data_generator
+CR1000.set_time_utc = set_time_utc
