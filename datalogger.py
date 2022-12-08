@@ -39,7 +39,8 @@ def get_data_generator(self, tablename, start_date=None, stop_date=None):
                     start_date = item["TimeOfRec"]
                     # for no duplicate record
                     if more and (
-                        (j == (len(rec["RecFrag"]) - 1)) and (i == (len(data) - 1))
+                        (j == (len(rec["RecFrag"]) - 1))
+                        and (i == (len(data) - 1))
                     ):
                         break
                     new_rec = {
@@ -83,14 +84,33 @@ def save_as_daily_files(records):
         records_to_csv(d, fpath)
 
 
+def remove_last_line(fname):
+    with open(fname, "r") as rf:
+        lines = rf.readlines()
+    with open(fname, "w") as wf:
+        wf.writelines(lines[:-2])
+    logger.warning(f"Removed last line from {fname}")
+
+
+def get_last_readout_from_file(fname):
+    with open(fname, "r") as f:
+        last_line = f.readlines()[-1]
+    last_record = last_line.split(",")[0]
+    logger.debug(f"Last record: {last_record}")
+    return datetime.datetime.strptime(last_record, "%Y-%m-%d %H:%M:%S")
+
+
 def get_last_record():
     local_files = sorted(glob.glob(f"{DATA_DIR}/*.csv"))
     if len(local_files) > 0:
-        with open(local_files[-1], "r") as f:
-            last_line = f.readlines()[-1]
-        last_record = last_line.split(",")[0]
-        logger.debug(f"Last readout: {last_record}")
-        return datetime.datetime.strptime(last_record, "%Y-%m-%d %H:%M:%S")
+        last_file = local_files[-1]
+        try:
+            return get_last_readout_from_file(last_file)
+        except ValueError as e:
+            logger.error(f"ValueError: {e}")
+            logger.warning(f"removing last line from {last_file}")
+            remove_last_line(last_file)
+            return get_last_readout_from_file(last_file)
     logger.warning("No .csv file found, will read all datalogger memory...")
     return datetime.datetime(1990, 1, 1, 0, 0, 1)
 
