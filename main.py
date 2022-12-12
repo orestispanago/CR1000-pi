@@ -1,12 +1,9 @@
-import glob
 import logging
 import logging.config
 import os
 import traceback
 
-from datalogger import DATA_DIR, get_data_since_last_readout, save_as_daily_files
-from uploader import upload_files_list, upload_ip_file
-from utils import archive_past_days
+from datalogger import Datalogger
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -20,12 +17,19 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    upload_ip_file()
-    data = get_data_since_last_readout()
-    save_as_daily_files(data)
-    local_files = sorted(glob.glob(f"{DATA_DIR}/*.csv"))
-    upload_files_list(local_files)
-    archive_past_days(local_files)
+    base_url = ""
+    dataloger_to_db = {"datalogger_table": "db_table"}
+
+    datalogger = Datalogger(serial_port="/dev/ttyUSB0")
+    datalogger.device.set_time_utc()
+    for datalogger_table, db_table in dataloger_to_db.items():
+        last_record_url = f"{base_url}/{db_table}/last"
+        post_url = f"{base_url}/{db_table}/store"
+
+        datalogger.get_last_record(last_record_url)
+        datalogger.get_records_since_last_readout(table=datalogger_table)
+        datalogger.post_records(post_url)
+
     logger.debug(f"{'-' * 15} SUCCESS {'-' * 15}")
 
 

@@ -1,17 +1,57 @@
 import datetime
-import glob
-import itertools
 import logging
-import os
 
+import requests
 import serial
 from pycampbellcr1000 import CR1000
 from pycampbellcr1000.utils import ListDict, nsec_to_time
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = "data"
-TABLE_NAME = "MinAvg_final"
+
+class Datalogger:
+    def __init__(self, serial_port=None):
+        self.device = CR1000(serial_connection(serial_port))
+        self.last_record = None
+        self.records = None
+
+    def get_last_record(self, url):
+        get_resp = requests.get(url)
+        data = get_resp.json(url)
+        last_record = datetime.datetime.strptime(
+            data["Datetime_UTC"], "%a, %d %b %Y %H:%M:%S GMT"
+        )
+        self.last_record = last_record
+        return last_record
+
+    def get_records_since_last_readout(self, table=None):
+        start = self.last_record + datetime.timedelta(milliseconds=1)
+        stop = datetime.datetime.utcnow()
+        records = self.device.get_data(table, start, stop)
+        logger.info(f"Retrieved {len(records)} records.")
+        self.records = records
+
+    def post_records(self, url):
+        resp = requests.post(url, json=self.records)
+        logger.debug(f"POST status: {resp.status_code}")
+        logger.debug(resp.text)
+
+
+def serial_connection(port=None):
+    # Faster than CR1000.from_url() on raspberry
+    # use port=None to create a serial port object without opening the underlying port
+    # Found here: https://github.com/LionelDarras/PyCampbellCR1000/issues/21
+    ser = serial.Serial(
+        port=None,
+        baudrate=115200,
+        timeout=2,
+        bytesize=serial.EIGHTBITS,
+        parity=serial.PARITY_NONE,
+        stopbits=1,
+    )
+    ser.port = port
+    return ser
+
 
 # Override pycampbellcr1000.ListDict method to avoid b'' in table fields
 def get_data_generator(self, tablename, start_date=None, stop_date=None):
@@ -59,78 +99,6 @@ def get_data_generator(self, tablename, start_date=None, stop_date=None):
             more = False
 
 
-def records_to_csv(records, fname):
-    if os.path.exists(fname):
-        output = records.to_csv(header=False)
-    else:
-        output = records.to_csv()
-    with open(fname, "a") as f:
-        f.write(output)
-
-
-def group_by_date(records):
-    dates = []
-    date_func = lambda x: x["Datetime_UTC"].date()
-    for key, group in itertools.groupby(records, date_func):
-        dates.append(ListDict(group))
-    return dates
-
-
-def save_as_daily_files(records):
-    dates = group_by_date(records)
-    for d in dates:
-        fname = f'{d[0].get("Datetime_UTC").strftime("%Y%m%d")}.csv'
-        fpath = os.path.join(DATA_DIR, fname)
-        records_to_csv(d, fpath)
-
-
-def remove_last_line(fname):
-    with open(fname, "r") as rf:
-        lines = rf.readlines()
-    with open(fname, "w") as wf:
-        wf.writelines(lines[:-2])
-    logger.warning(f"Removed last line from {fname}")
-
-
-def get_last_readout_from_file(fname):
-    with open(fname, "r") as f:
-        last_line = f.readlines()[-1]
-    last_record = last_line.split(",")[0]
-    logger.debug(f"Last record: {last_record}")
-    return datetime.datetime.strptime(last_record, "%Y-%m-%d %H:%M:%S")
-
-
-def get_last_record():
-    local_files = sorted(glob.glob(f"{DATA_DIR}/*.csv"))
-    if len(local_files) > 0:
-        last_file = local_files[-1]
-        try:
-            return get_last_readout_from_file(last_file)
-        except ValueError as e:
-            logger.error(f"ValueError: {e}")
-            logger.warning(f"removing last line from {last_file}")
-            remove_last_line(last_file)
-            return get_last_readout_from_file(last_file)
-    logger.warning("No .csv file found, will read all datalogger memory...")
-    return datetime.datetime(1990, 1, 1, 0, 0, 1)
-
-
-def serial_port():
-    # Faster than CR1000.from_url() on raspberry
-    # use port=None to create a serial port object without opening the underlying port
-    # Found here: https://github.com/LionelDarras/PyCampbellCR1000/issues/21
-    ser = serial.Serial(
-        port=None,
-        baudrate=115200,
-        timeout=2,
-        bytesize=serial.EIGHTBITS,
-        parity=serial.PARITY_NONE,
-        stopbits=1,
-    )
-    ser.port = "/dev/ttyUSB0"
-    return ser
-
-
 def set_time_utc(self):
     """Sets datalogger time to current UTC"""
     current_time = self.gettime()
@@ -147,21 +115,6 @@ def set_time_utc(self):
     new_time = nsec_to_time(msg["Time"]) - (sdt1 + sdt2)
     logger.debug(f"New time: {new_time}")
     return new_time
-
-
-def get_data_since_last_readout():
-    start = get_last_record() + datetime.timedelta(milliseconds=1)
-    stop = datetime.datetime.utcnow()
-
-    logger.debug("Connecting to device...")
-    device = CR1000(serial_port())
-    logger.debug("Connection successfull.")
-
-    device.set_time_utc()
-
-    data = device.get_data(TABLE_NAME, start, stop)
-    logger.info(f"Retrieved {len(data)} records.")
-    return data
 
 
 CR1000.get_data_generator = get_data_generator

@@ -1,12 +1,6 @@
 ## CR1000-pi
 
-Gets measurements from Campbell Scientific CR1000 or CR800 datalogger
-
-Saves data to daily csv files
-
-Uploads csv files to FTP server
-
-Uploads IP address file to FTP server (for WiFi networks).
+Posts measurements from Campbell Scientific CR1000 or CR800 datalogger to web app.
 
 ## Requirements: 
 
@@ -16,10 +10,7 @@ Install using:
 
 ```pip install pycampbellcr1000```
 
-
-## Instructions
-
-Edit the FTP parameters in ```uploader.py``` and ```TABLE_NAME``` in ```datalogger.py```. 
+## Cron job
 
 To avoid overlapping cron job execution, use ```flock``` in crontab:
 
