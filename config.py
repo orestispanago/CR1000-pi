@@ -1,4 +1,5 @@
 import json
+import os
 
 
 class Config:
@@ -10,7 +11,10 @@ class Config:
         return f"{self.__dict__}"
 
 
-with open("ftp_config.json", "r") as f:
+dname = os.path.dirname(os.path.abspath(__file__))
+config_file = os.path.join(dname, "ftp_config.json")
+
+with open(config_file, "r") as f:
     contents = json.load(f)
 
 nas = Config(contents["nas"])
