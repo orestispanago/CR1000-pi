@@ -10,9 +10,6 @@ from pycampbellcr1000.utils import ListDict, nsec_to_time
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = "data"
-TABLE_NAME = "MinAvg_final"
-
 # Override pycampbellcr1000.ListDict method to avoid b'' in table fields
 def get_data_generator(self, tablename, start_date=None, stop_date=None):
     """Get all data from `tablename` from `start_date` to `stop_date` as
@@ -76,11 +73,11 @@ def group_by_date(records):
     return dates
 
 
-def save_as_daily_files(records):
+def save_as_daily_files(records, folder=None):
     dates = group_by_date(records)
     for d in dates:
         fname = f'{d[0].get("Datetime_UTC").strftime("%Y%m%d")}.csv'
-        fpath = os.path.join(DATA_DIR, fname)
+        fpath = os.path.join(folder, fname)
         records_to_csv(d, fpath)
 
 
@@ -100,8 +97,8 @@ def get_last_readout_from_file(fname):
     return datetime.datetime.strptime(last_record, "%Y-%m-%d %H:%M:%S")
 
 
-def get_last_record():
-    local_files = sorted(glob.glob(f"{DATA_DIR}/*.csv"))
+def get_last_record_time(folder=None):
+    local_files = sorted(glob.glob(f"{folder}/*.csv"))
     if len(local_files) > 0:
         last_file = local_files[-1]
         try:
@@ -115,7 +112,7 @@ def get_last_record():
     return datetime.datetime(1990, 1, 1, 0, 0, 1)
 
 
-def serial_port():
+def serial_port(port_name="/dev/ttyUSB0"):
     # Faster than CR1000.from_url() on raspberry
     # use port=None to create a serial port object without opening the underlying port
     # Found here: https://github.com/LionelDarras/PyCampbellCR1000/issues/21
@@ -127,7 +124,7 @@ def serial_port():
         parity=serial.PARITY_NONE,
         stopbits=1,
     )
-    ser.port = "/dev/ttyUSB0"
+    ser.port = port_name
     return ser
 
 
@@ -149,17 +146,18 @@ def set_time_utc(self):
     return new_time
 
 
-def get_data_since_last_readout():
-    start = get_last_record() + datetime.timedelta(milliseconds=1)
-    stop = datetime.datetime.utcnow()
-
+def connect(port="/dev/ttyUSB0"):
     logger.debug("Connecting to device...")
-    device = CR1000(serial_port())
+    device = CR1000(serial_port(port_name=port))
     logger.debug("Connection successfull.")
+    return device
 
-    device.set_time_utc()
 
-    data = device.get_data(TABLE_NAME, start, stop)
+def get_data_since_last_readout(device=None, folder=None, table=None):
+    dt = datetime.timedelta(milliseconds=1)
+    start = get_last_record_time(folder=folder) + dt
+    stop = datetime.datetime.utcnow()
+    data = device.get_data(table, start, stop)
     logger.info(f"Retrieved {len(data)} records.")
     return data
 

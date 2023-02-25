@@ -4,9 +4,7 @@ Gets measurements from Campbell Scientific CR1000 or CR800 datalogger
 
 Saves data to daily csv files
 
-Uploads csv files to FTP server
-
-Uploads IP address file to FTP server (for WiFi networks).
+Uploads csv files to FTP or SFTP server
 
 ## Requirements: 
 
@@ -16,6 +14,9 @@ Install using:
 
 ```pip install pycampbellcr1000```
 
+pysftp:
+
+```pip install pysftp```
 
 ## Instructions
 

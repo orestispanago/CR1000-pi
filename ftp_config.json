@@ -1,0 +1,27 @@
+{
+    "nas": {
+        "protocol": "FTP",
+        "ip": "",
+        "user": "",
+        "passwd": "",
+        "dir": "/dataloggers/test",
+        "annual_folders": true
+    },
+    "mymeasurements": {
+        "protocol": "FTP",
+        "ip": "",
+        "user": "",
+        "passwd": "",
+        "dir": "/dataloggers/test/mymeasurements",
+        "annual_folders": false
+    },
+    "pyranocam": {
+        "protocol": "SFTP",
+        "host": "",
+        "user": "",
+        "passwd": "",
+        "dir": "",
+        "subdir": "",
+        "known_hosts_file": "known_hosts"
+    }
+}
