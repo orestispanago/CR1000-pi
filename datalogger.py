@@ -1,3 +1,4 @@
+import csv
 import datetime
 import glob
 import itertools
@@ -73,12 +74,34 @@ def group_by_date(records):
     return dates
 
 
-def save_as_daily_files(records, folder=None):
+def split_to_chunks(records, chunk_size=5):
+    chunks = []
+    for i in range(0, len(records), chunk_size):
+        chunk = records[i : i + chunk_size]
+        chunks.append(chunk)
+    return chunks
+
+
+def save_as_daily_files(records, folder=None, prefix=""):
     dates = group_by_date(records)
     for d in dates:
-        fname = f'{d[0].get("Datetime_UTC").strftime("%Y%m%d")}.csv'
+        fname = f'{prefix}{d[0].get("Datetime_UTC").strftime("%Y%m%d")}.csv'
         fpath = os.path.join(folder, fname)
         records_to_csv(d, fpath)
+
+
+def save_multiple_files(records, folder=None, records_per_file=5, prefix=""):
+    chunks = split_to_chunks(records, chunk_size=records_per_file)
+    for records_group in chunks:
+        fname = f'{prefix}{records_group[0].get("Datetime_UTC").strftime("%Y%m%d%H%M")}.csv'
+        fpath = os.path.join(folder, fname)
+        keys = records_group[0].keys()
+        with open(fpath, "w") as f:
+            dict_writer = csv.DictWriter(
+                f, fieldnames=keys, quoting=csv.QUOTE_NONNUMERIC
+            )
+            dict_writer.writerows(records_group)
+        logger.debug(f"Wrote {len(records_group)} records in {fpath}")
 
 
 def remove_last_line(fname):

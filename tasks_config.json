@@ -1,27 +1,36 @@
 {
     "nas": {
+        "cr1000_table": "MinAvg_final",
         "protocol": "FTP",
         "ip": "",
         "user": "",
         "passwd": "",
         "dir": "/dataloggers/test",
-        "annual_folders": true
+        "annual_folders": true,
+        "local_folder": "data/1min",
+        "prefix": "meteo1min_"
     },
     "mymeasurements": {
+        "cr1000_table": "MinAvg_final",
         "protocol": "FTP",
         "ip": "",
         "user": "",
         "passwd": "",
         "dir": "/dataloggers/test/mymeasurements",
-        "annual_folders": false
+        "annual_folders": false,
+        "local_folder": "data/1min-small-files",
+        "prefix": "meteo1min_"
     },
     "pyranocam": {
+        "cr1000_table": "10secAvg_final",
         "protocol": "SFTP",
         "host": "",
         "user": "",
         "passwd": "",
         "dir": "",
         "subdir": "",
-        "known_hosts_file": "known_hosts"
+        "known_hosts_file": "known_hosts",
+        "local_folder": "data/10sec",
+        "prefix": "meteo10sec_"
     }
 }
