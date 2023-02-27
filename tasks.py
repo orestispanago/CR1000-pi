@@ -71,12 +71,12 @@ class PyranocamTask(Task):
         local_files = sorted(glob.glob(f"{self.local_folder}/*.csv"))
         sftp_upload_files(
             local_files,
-            host=None,
-            user=None,
-            passwd=None,
-            known_hosts_file=None,
-            dir=None,
-            subdir=None,
+            host=self.host,
+            user=self.user,
+            passwd=self.passwd,
+            known_hosts_file=self.known_hosts_file,
+            dir=self.dir,
+            subdir=self.subdir,
         )
 
 

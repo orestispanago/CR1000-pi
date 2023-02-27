@@ -1,3 +1,4 @@
 *.csv
-*.log
+logs/
 __pycache__/
+known_hosts

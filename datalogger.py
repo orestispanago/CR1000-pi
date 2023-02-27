@@ -101,7 +101,6 @@ def save_multiple_files(records, folder=None, records_per_file=5, prefix=""):
                 f, fieldnames=keys, quoting=csv.QUOTE_NONNUMERIC
             )
             dict_writer.writerows(records_group)
-        logger.debug(f"Wrote {len(records_group)} records in {fpath}")
 
 
 def remove_last_line(fname):

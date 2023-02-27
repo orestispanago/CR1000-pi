@@ -8,7 +8,7 @@
         "dir": "/dataloggers/test",
         "annual_folders": true,
         "local_folder": "data/1min",
-        "prefix": "meteo1min_"
+        "prefix": "rsi1min_"
     },
     "mymeasurements": {
         "cr1000_table": "MinAvg_final",
@@ -19,18 +19,18 @@
         "dir": "/dataloggers/test/mymeasurements",
         "annual_folders": false,
         "local_folder": "data/1min-small-files",
-        "prefix": "meteo1min_"
+        "prefix": "rsi1min_"
     },
     "pyranocam": {
-        "cr1000_table": "10secAvg_final",
+        "cr1000_table": "MinAvg_final",
         "protocol": "SFTP",
         "host": "",
         "user": "",
         "passwd": "",
-        "dir": "",
-        "subdir": "",
+        "dir": "test",
+        "subdir": "rsi",
         "known_hosts_file": "known_hosts",
         "local_folder": "data/10sec",
-        "prefix": "meteo10sec_"
+        "prefix": "rsi10sec_"
     }
 }
