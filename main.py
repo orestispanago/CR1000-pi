@@ -28,10 +28,10 @@ def main():
     )
     nas_task.save(data=data_1min)
     mymeasurements_task.save(data=data_1min)
-    nas_task.upload()
     mymeasurements_task.upload()
-    nas_task.archive()
     mymeasurements_task.archive()
+    nas_task.upload()
+    nas_task.archive()
 
     data_10sec = get_data_since_last_readout(
         device=device,
