@@ -64,6 +64,7 @@ def records_to_csv(records, fname):
         output = records.to_csv()
     with open(fname, "a") as f:
         f.write(output)
+    logger.debug(f"Wrote {len(records)} records to {fname}")
 
 
 def group_by_date(records):

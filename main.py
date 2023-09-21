@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    nas_task.upload_ip()
     device = connect(port="/dev/ttyUSB0")
     device.set_time_utc()
     data_1min = get_data_since_last_readout(

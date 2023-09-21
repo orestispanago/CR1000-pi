@@ -1,8 +1,25 @@
 import glob
+import io
 import logging
 import os
+import urllib.request
 
 logger = logging.getLogger(__name__)
+
+
+def str_to_bytes_io(text):
+    bio = io.BytesIO()
+    bio.write(text.encode())
+    bio.seek(0)  # move to beginning of file
+    return bio
+
+
+def get_external_ip():
+    external_ip = (
+        urllib.request.urlopen("https://ifconfig.me/ip").read().decode("utf-8")
+    )
+    logger.debug(f"External IP: {external_ip}")
+    return external_ip
 
 
 def mkdir_if_not_exists(dir_path):

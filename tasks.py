@@ -4,7 +4,7 @@ import logging
 import os
 
 from datalogger import save_as_daily_files, save_multiple_files
-from uploaders import ftp_upload_files, sftp_upload_files
+from uploaders import ftp_upload_files, sftp_upload_files, upload_ip_file
 from utils import archive_past_days, archive_uploaded
 
 logger = logging.getLogger(__name__)
@@ -45,6 +45,9 @@ class Task:
 class NasTask(Task):
     def __init__(self, dict):
         super(NasTask, self).__init__(dict)
+
+    def upload_ip(self):
+        upload_ip_file(self.ip, self.user, self.passwd, self.ip_file)
 
 
 class MymeasurementsTask(Task):

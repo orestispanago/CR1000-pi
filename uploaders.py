@@ -4,7 +4,21 @@ from ftplib import FTP, error_perm
 
 import pysftp
 
+import utils
+
 logger = logging.getLogger(__name__)
+
+
+def upload_file_from_memory(ip, user, password, remote_path, bytes_io_object):
+    with FTP(ip, user, password) as ftp:
+        ftp.storbinary(f"STOR {remote_path}", bytes_io_object)
+    logger.info(f"Created file {remote_path} at FTP")
+
+
+def upload_ip_file(ip, user, password, remote_path):
+    external_ip = utils.get_external_ip()
+    ip_bytes_io = utils.str_to_bytes_io(external_ip)
+    upload_file_from_memory(ip, user, password, remote_path, ip_bytes_io)
 
 
 def ftp_mkdir_and_enter(ftp_session, dir_name):
